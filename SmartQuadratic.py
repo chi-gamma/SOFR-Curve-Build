@@ -297,12 +297,4 @@ plt.tight_layout()
 plt.show()
 
 
-# The Smart Quadratic interpolation has the same discount factor 
-# as the piecewise constant forward # interpolation on the maturity dates 
-# of each of the instruments but is slighly different on all other coupon dates.
-
-
-
-
-
 
