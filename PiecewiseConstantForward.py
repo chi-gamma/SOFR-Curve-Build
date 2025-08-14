@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import QuantLib as ql
 import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
 
 
 class OIS:
@@ -151,39 +152,17 @@ def BuildCurve(curveDate, handler,
     fittedFwds = globalObjFunc(init_guess)
     anchorDFs[1:] = np.exp(np.cumsum(-fittedFwds * anchorTimesDelta))
     
-    discount_curve = {
+    curveData = {
         'Tenor': curveTenors,
         'MaturityDate': [d.to_date() for d in anchorDates[1:]],
         'MarketRate': curveParRates,
         'ShockSize': shockSizes,
         'DiscountFactor': anchorDFs[1:], 
         'ZeroRate': np.log(anchorDFs[1:]) / -anchorTimes[1:],
-        'PiecewiseConstForward' : fittedFwds
         }
     
-    return discount_curve
+    return curveData, anchorDFs, anchorTimes, fittedFwds
 
-
-def plot(discount_curve):
-    fig, ax1 = plt.subplots(figsize=(10, 5))
-    
-    # Discount Factor
-    ax1.plot(discount_curve['MaturityDate'], discount_curve['DiscountFactor'], marker='o', label='Discount Factor', color='blue')
-    ax1.set_ylabel('Discount Factor', color='blue')
-    ax1.tick_params(axis='y', labelcolor='blue')
-    
-    # Zero Rate
-    ax2 = ax1.twinx()
-    ax2.plot(discount_curve['MaturityDate'], discount_curve['ZeroRate'], marker='s', linestyle='--', label='Zero Rate', color='green')
-    ax2.set_ylabel('Zero Rate', color='green')
-    ax2.tick_params(axis='y', labelcolor='green')
-    
-    # Title and Grid
-    plt.title('SOFR Discount Curve and Zero Rates')
-    fig.tight_layout()
-    plt.grid(True)
-    plt.show()
-      
       
 curveDate = ql.Date(7, 7, 2025)
 sofrTenors = ['1W', '2W', '3W', '1M', '2M', '3M', '4M', '5M', '6M', '7M', '8M', '9M', '10M', '11M', '12M', '18M', '2Y',
@@ -201,19 +180,25 @@ for tenor,rate in zip(sofrTenors, sofrRates):
     handler.add_unit(tenor, rate)  
     
 # Results
-discount_curve = pd.DataFrame(BuildCurve(curveDate, handler))
-plot(discount_curve)
-    
-    
-# Apply Shock
-shocks = {tenor : 0.0001 for tenor in sofrTenors}
-shocked_discount_curve = pd.DataFrame(BuildCurve(curveDate, handler, shocks=shocks))
-
-     
-    
-    
-    
+curveData, curveDFs, curveTimes, fwdRates = BuildCurve(curveDate, handler)
+curveData = pd.DataFrame(curveData)
 
 
-    
+# The Piecewise Constant Forward interpolation is equivalent to log linear interpolation on discount factors
+logDFs = np.log(curveDFs)
+discountCurve = lambda t: np.exp(np.interp(t, curveTimes, logDFs))
 
+
+# Plot Daily Forward Rates
+t = np.arange(curveTimes[0], curveTimes[-1], 1.0/365.0)
+df = discountCurve(t)
+fwds = 360.0 * (df[:-1] / df[1:] - 1.0) # Actual360 Basis
+plt.figure(figsize=(10, 5))
+plt.plot(t[1:], fwds)
+plt.xlabel('Time (Years)')
+plt.ylabel('Rate')
+plt.title('Daily Forward SOFR Rates (' + curveDate.to_date().strftime('%m-%d-%Y') + ')')
+plt.gca().yaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+plt.grid(True)
+plt.tight_layout()
+plt.show()
