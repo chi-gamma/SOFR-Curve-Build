@@ -18,7 +18,7 @@ This repository implements and compares **three methods** for constructing a SOF
 
 ### 2. **Smart Quadratic Iterative Curve**
 
-- **Builds on Method 1** by applying an **area-preserving quadratic interpolation** to the bootstrapped forwards.
+- **Builds on Method 1** by applying a **quadratic interpolation** to the bootstrapped forwards.
 - Iteratively adjusts market rates to ensure instruments are repriced using the smoothed curve.
 - Produces a **C⁰-continuous** forward curve that is smooth in value but not in slope.
 
@@ -43,7 +43,10 @@ This repository implements and compares **three methods** for constructing a SOF
 
 ---
 
+#  📌 Instantaneous Forward Rate Modeling
+Methods 2 (Smart Quadratic) and 3 (Area-Preserving Quadratic Spline) directly model the instantaneous forward rate, producing smoothly varying forward curves rather than piecewise constant (stepwise) forward rates as in Method 1.This smoothness is particularly beneficial for OIS curve construction, where the one-day forward rate closely approximates the instantaneous forward rate, making these methods more accurate and realistic for such applications.
 
+---
 
 
 📚 Reference
