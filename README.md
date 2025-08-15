@@ -9,7 +9,7 @@ This repository implements and compares **three methods** for constructing a SOF
 
 ### 1. **Piecewise Constant Forward Curve**
 
-- Bootstraps a set of **piecewise constant**, **continuously compounded** forward rates.
+- Solves for a set of **piecewise constant**, **continuously compounded** forward rates.
 - Uses a **multivariate Newton-Raphson** algorithm to solve the nonlinear pricing equations.
 - Produces a curve that exactly reprices market instruments, but is **discontinuous** at maturity points.
 - While fast and straightforward, the resulting forward curve has sharp **jumps in slope** and lacks realism.
@@ -18,7 +18,7 @@ This repository implements and compares **three methods** for constructing a SOF
 
 ### 2. **Smart Quadratic Iterative Curve**
 
-- **Builds on Method 1** by applying a **quadratic interpolation** to the bootstrapped forwards.
+- **Builds on Method 1** by applying **iteration** and **quadratic interpolation** to the piecewise constant forwards.
 - Iteratively adjusts market rates to ensure instruments are repriced using the smoothed curve.
 - Produces a **C⁰-continuous** forward curve that is smooth in value but not in slope.
 
